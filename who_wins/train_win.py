@@ -7,27 +7,34 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 
 
 class LearnWinner:
-    def __init__(self, pokemon):
-        self.path = '../Pokemon/Pokemon.csv'
-        self.power = LearnPower(self.path)
+    def __init__(self, pokemon, lang):
+        self.path = '../Pokemon/Pokemon_edited.csv'
+        self.power = LearnPower('../Pokemon/Pokemon.csv')
+        self.lang = lang
         self.X, self.y, self.score = self.power.train_data()
         self.episodes = 800  # 횟수
-        self.my = pokemon
+        self.my = pokemon  # 사용자가 검색한 포켓몬 코드 또는 이름
         self.df = pd.read_csv(self.path)
         self.name = None
         self.type = None
         self.flag = self.checkDigit()
 
     def checkDigit(self):
-        if self.my.isdigit():
+        if self.my.isdigit():  # 사용자 입력이 숫자 코드일 경우
             self.my = int(self.my)
             idx = self.X[self.X['Name'] == self.my].index[0]
-            self.name = self.df['Name'][idx]  # 포켓몬의 이름
+            if self.lang != 'eng':
+                self.name = self.df['Name_' + self.lang][idx]  # 포켓몬의 이름
+            else:
+                self.name = self.df['Name'][idx]
             self.type = self.df['Type 1'][idx]  # 포켓몬 속성
-        else:
+        else:  # 사용자 입력이 이름일 경우
             self.name = self.my
             try:
-                idx = self.df[self.df['Name'] == self.name].index[0]
+                if self.lang != 'eng':
+                    idx = self.df[self.df['Name_' + self.lang] == self.name].index[0]
+                else:
+                    idx = self.df[self.df['Name'] == self.name].index[0]
                 self.my = self.X['Name'][idx]
                 self.type = self.df['Type 1'][idx]  # 포켓몬 속성
             except IndexError:
@@ -36,7 +43,7 @@ class LearnWinner:
 
     def train_winner(self):
         if not self.flag:
-            return self.name, 'X', 0, '도감에 없는 캐릭터입니다.'
+            return self.name, '???', 0, 'NOT FOUND'
         # Name열에서 두 개 랜덤으로 뽑아
         name1 = []
         power1 = []
@@ -80,11 +87,26 @@ class LearnWinner:
         win_rate = pr * 100 * (score * self.score)
         # print('승률:', win_rate, '%')
         if win_rate >= 80:
-            msg = '강한 캐릭터입니다.'
+            if self.lang == 'eng':
+                msg = 'Very strong'
+            elif self.lang == 'kr':
+                msg = '강한 캐릭터입니다.'
+            else:
+                msg = '強い！！！'
         elif 50 < win_rate < 80:
-            msg = '보통 캐릭터입니다.'
+            if self.lang == 'eng':
+                msg = 'Normal'
+            elif self.lang == 'kr':
+                msg = '보통 캐릭터입니다.'
+            else:
+                msg = '普通のキャラクターです。'
         else:
-            msg = '공격력이 낮은 캐릭터입니다.'
+            if self.lang == 'eng':
+                msg = 'Not suitable for battles'
+            elif self.lang == 'kr':
+                msg = '공격력이 낮은 캐릭터입니다.'
+            else:
+                msg = '弱いポケモン'
         return self.name, self.type, win_rate, msg
 
 # pokemon = np.random.randint(1, 800)
