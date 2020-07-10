@@ -85,6 +85,7 @@ class LearnWinner:
         # print(pr)
         score = clf.fit(X_train, y_train).score(X_test, y_test)
         win_rate = pr * 100 * (score * self.score)
+        print('정확도:', (score * self.score))
         # print('승률:', win_rate, '%')
         if win_rate >= 80:
             if self.lang == 'eng':
